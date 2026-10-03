@@ -55,7 +55,7 @@ h1 small { font-size: .5em; color: var(--paper); vertical-align: middle; margin-
 .lineup a { display: block; text-align: center; min-width: 0; color: inherit; text-decoration: none; transition: transform .15s; }
 .lineup a:active { transform: scale(.94); }
 .lineup a:focus-visible { outline: 3px solid var(--paper); outline-offset: 3px; border-radius: 8px; }
-.lineup img { width: 100%; max-width: 64px; aspect-ratio: 1; border-radius: 50%; object-fit: cover; object-position: 50% 12%;
+.lineup img { width: 100%; max-width: 64px; aspect-ratio: 1; object-fit: cover; object-position: 50% 12%;
   display: block; margin: 0 auto 4px; border: 6px solid var(--c); background: var(--c); }
 .lineup span { display: inline-block; background: var(--ink); color: var(--paper); font-family: var(--display);
   font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 2px 6px; max-width: 100%;
@@ -63,16 +63,16 @@ h1 small { font-size: .5em; color: var(--paper); vertical-align: middle; margin-
 
 .board-wrap { position: relative; }
 .box { position: relative; padding: 20px; touch-action: none;
-  background: rgba(13,13,15,.55); border-radius: 52px;
+  background: rgba(13,13,15,.55);
   -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
   box-shadow: 0 18px 40px rgba(13,13,15,.35); }
 /* clip a little outside the grid so a selected edge queen's ring isn't cut, while new queens still drop in out of sight */
-#board { position: relative; width: 100%; aspect-ratio: 1; max-width: 100%; clip-path: inset(-14px round 46px); touch-action: none; }
-.cellbg { position: absolute; border-radius: 50%; background: rgba(255,255,255,.08); }
+#board { position: relative; width: 100%; aspect-ratio: 1; max-width: 100%; clip-path: inset(-14px); touch-action: none; }
+.cellbg { position: absolute; background: rgba(255,255,255,.08); }
 .tile { position: absolute; left: 0; top: 0; transition: transform .22s cubic-bezier(.3,.7,.4,1.1); will-change: transform;
   display: flex; align-items: center; justify-content: center; }
 .tile.fall { transition-duration: .32s; transition-timing-function: cubic-bezier(.5,0,.6,1.25); }
-.card { width: 86%; height: 86%; border-radius: 50%; border: 5px solid var(--c); overflow: hidden; background: var(--c);
+.card { width: 86%; height: 86%; border: 5px solid var(--c); overflow: hidden; background: var(--c);
   box-shadow: 0 3px 8px rgba(13,13,15,.35); transition: transform .2s, opacity .2s; }
 .card img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 12%; display: block; pointer-events: none; -webkit-user-drag: none; }
 .tile.sel .card { transform: scale(1.15); box-shadow: 0 0 0 3px var(--paper), 0 8px 14px rgba(13,13,15,.5); }
@@ -93,7 +93,7 @@ button.primary { background: var(--green); }
 button:focus-visible { outline: 3px solid var(--paper); outline-offset: 3px; }
 .help { font-size: 12px; font-weight: 500; color: var(--ink); text-align: center; margin: 0; background: rgba(255,255,255,.75); padding: 6px 10px; align-self: center; }
 
-.overlay { position: absolute; inset: 0; z-index: 10; border-radius: 52px; background: rgba(13,13,15,.82); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+.overlay { position: absolute; inset: 0; z-index: 10; background: rgba(13,13,15,.82); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 20px; }
 .overlay h2 { font-family: var(--display); font-weight: 400; text-transform: uppercase; font-size: 48px; line-height: 1; margin: 0;
   color: var(--green); text-shadow: 4px 4px 0 var(--pink); }
@@ -114,7 +114,7 @@ button:focus-visible { outline: 3px solid var(--paper); outline-offset: 3px; }
 .scores li.me { background: var(--pink); color: var(--ink); }
 .scores li.me::before { color: var(--ink); }
 .empty { color: var(--paper); opacity: .8; }
-.overlay img { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; object-position: 50% 12%; border: 5px solid var(--pink); box-shadow: 0 0 0 4px var(--green); }
+.overlay img { width: 84px; height: 84px; object-fit: cover; object-position: 50% 12%; border: 5px solid var(--pink); box-shadow: 0 0 0 4px var(--green); }
 
 @keyframes wiggle { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-14deg) scale(1.12)} 75%{transform:rotate(14deg) scale(1.12)} }
 @keyframes toast { 0%{opacity:0; transform:translate(-50%,-30%) scale(.6) rotate(-6deg)} 20%{opacity:1; transform:translate(-50%,-50%) scale(1.1) rotate(-4deg)} 100%{opacity:0; transform:translate(-50%,-110%) scale(1) rotate(-4deg)} }
