@@ -34,11 +34,11 @@ body::before { content: ""; position: fixed; inset: -60px; z-index: -1; pointer-
 .app { max-width: 520px; margin: 0 auto; padding-inline: 16px; padding-block: 14px 18px;
   display: flex; flex-direction: column; gap: 12px; min-height: 100%; }
 
-header { position: relative; display: flex; justify-content: center; padding-block: 4px; }
-.banner { background: var(--pink); border: 4px solid var(--ink); transform: rotate(-3deg) skewX(-6deg);
-  padding: 6px 18px 8px; box-shadow: 6px 6px 0 var(--ink); text-align: center; }
+header { position: relative; display: flex; justify-content: center; padding-block: 4px 18px; }
+.banner { background: var(--pink); border: 3px solid var(--ink); transform: rotate(-3deg) skewX(-6deg);
+  padding: 5px 14px 6px; box-shadow: 5px 5px 0 var(--ink); text-align: center; }
 h1 { margin: 0; font-family: var(--display); font-weight: 400; text-transform: uppercase; line-height: .9;
-  color: var(--green); font-size: clamp(38px, 12vw, 58px); letter-spacing: .01em;
+  color: var(--green); font-size: clamp(28px, 9vw, 44px); letter-spacing: .01em;
   -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; text-shadow: 3px 3px 0 var(--ink); }
 h1 small { font-size: .5em; color: var(--paper); vertical-align: middle; margin-inline: .08em; }
 
@@ -127,7 +127,7 @@ button:focus-visible { outline: 3px solid var(--paper); outline-offset: 3px; }
 <div class="app">
   <header>
     <div class="banner">
-      <h1>Queens <small>of</small> Science</h1>
+      <h1>Queens <small>of</small><br>Science</h1>
     </div>
   </header>
 
