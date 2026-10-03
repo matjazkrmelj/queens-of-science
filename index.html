@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;800&display=swap">
 <style>
-/* Layout: event-poster stage. Angled pink/green blocks behind, pink banner title, black stat bars, black board with frosted-glass board with round queen pieces. Single look by choice. */
+/* Layout: event-poster stage. Angled pink/green blocks behind, SVG logo, black stat bars, dark frosted board with square queen pieces. Single look by choice. */
 :root {
   --pink: #f659ce;
   --pink-deep: #d43aae;
@@ -35,12 +35,8 @@ body::before { content: ""; position: fixed; inset: -60px; z-index: -1; pointer-
   display: flex; flex-direction: column; gap: 12px; min-height: 100%; }
 
 header { position: relative; display: flex; justify-content: center; padding-block: 4px 18px; }
-.banner { background: var(--pink); border: 3px solid var(--ink); transform: rotate(-3deg) skewX(-6deg);
-  padding: 5px 14px 6px; box-shadow: 5px 5px 0 var(--ink); text-align: center; }
-h1 { margin: 0; font-family: var(--display); font-weight: 400; text-transform: uppercase; line-height: .9;
-  color: var(--green); font-size: clamp(28px, 9vw, 44px); letter-spacing: .01em;
-  -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; text-shadow: 3px 3px 0 var(--ink); }
-h1 small { font-size: .5em; color: var(--paper); vertical-align: middle; margin-inline: .08em; }
+.logo { margin: 0; line-height: 0; }
+.logo img { width: 160px; height: auto; max-width: 100%; display: block; }
 
 
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
@@ -131,9 +127,7 @@ button:focus-visible { outline: 3px solid var(--paper); outline-offset: 3px; }
 
 <div class="app">
   <header>
-    <div class="banner">
-      <h1>Queens <small>of</small><br>Science</h1>
-    </div>
+    <h1 class="logo"><img src="img/logo.svg" alt="Queens of Science" width="160" height="111"></h1>
   </header>
 
   <section class="stats" aria-label="Score">
