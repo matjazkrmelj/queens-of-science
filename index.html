@@ -158,12 +158,13 @@ const QUEENS = [
   ["puki-harana","Puki Harana"],["velvette-teddy","Velvette Teddy"]
 ];
 const COLORS = ["#f659ce", "#e8101c", "#1556ff", "#19d469"]; // Bikini pink, Georgy red, Puki blue, Velvette green
-const N = 5, TYPES = QUEENS.length, MOVES = 20, TARGET = 12000, PTS = 60, ENCORE = 500;
+const N = 5, TYPES = QUEENS.length, MOVES = 20, DEFAULT_TARGET = 12000, PTS = 60, ENCORE = 500;
 const SHOUTS = ["Slay!", "Werk!", "Yasss!", "Sashay!", "Iconic!", "Fierce!", "Mother!"];
 
 const boardEl = document.getElementById("board");
 const $ = id => document.getElementById(id);
-let grid, lineup, score, moves, busy, selected, cell, hintTimer;
+let grid, lineup, score, moves, busy, selected, cell, hintTimer, over = false;
+let target = DEFAULT_TARGET;   // the current #1 score on the leaderboard
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -194,10 +195,10 @@ function makeTile(type) {
 }
 function updateHud() {
   $("score").textContent = score.toLocaleString();
-  $("target").textContent = TARGET.toLocaleString();
+  $("target").textContent = target.toLocaleString();
   $("moves").textContent = moves;
   $("movesBox").classList.toggle("low", moves <= 5);
-  $("progress").style.width = Math.min(100, score / TARGET * 100) + "%";
+  $("progress").style.width = Math.min(100, score / target * 100) + "%";
 }
 function toast(text) {
   const t = document.createElement("div");
@@ -213,7 +214,8 @@ function newGame() {
   lineup = QUEENS.slice();
   $("lineup").innerHTML = lineup.map((q, i) =>
     `<div><img src="img/${q[0]}.jpg" alt="" style="--c:${COLORS[i]}"><span>${q[1]}</span></div>`).join("");
-  score = 0; moves = MOVES; busy = false; selected = null;
+  score = 0; moves = MOVES; busy = false; selected = null; over = false;
+  loadTarget();
   do {
     grid = Array.from({ length: N }, () => Array(N).fill(null));
     for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
@@ -276,7 +278,7 @@ async function trySwap(a, b) {
   moves--; updateHud();
   await resolve();
   busy = false;
-  if (score >= TARGET) return endGame(true);
+  if (score > target) return endGame(true);
   if (moves <= 0) return endGame(false);
   armHint();
 }
@@ -370,21 +372,27 @@ async function showLeaderboard(highlightId) {
   const rows = list.map(e => `<li class="${e.id === highlightId ? "me" : ""}"><span>${esc(e.name)}</span><b>${e.score.toLocaleString()}</b></li>`).join("");
   o.className = "overlay scroll";
   o.innerHTML = `<h2>Leaderboard</h2>${failed ? `<p class="empty">Couldn't load the leaderboard. Check your connection and try again.</p>` : rows ? `<ol class="scores">${rows}</ol>` : `<p class="empty">No scores yet. Finish a show to get on the board.</p>`}
-    <button class="primary" id="again">${moves > 0 && score < TARGET && highlightId === undefined ? "Back to game" : "Play again"}</button>`;
+    <button class="primary" id="again">${!over && highlightId === undefined ? "Back to game" : "Play again"}</button>`;
   o.hidden = false;
-  $("again").onclick = () => { o.className = "overlay"; if (highlightId === undefined && moves > 0 && score < TARGET) { o.hidden = true; armHint(); } else newGame(); };
+  $("again").onclick = () => { o.className = "overlay"; if (highlightId === undefined && !over) { o.hidden = true; armHint(); } else newGame(); };
+}
+
+async function loadTarget() {
+  try { const top = (await Scores.top())[0]; target = top ? top.score : DEFAULT_TARGET; }
+  catch { target = DEFAULT_TARGET; }
+  updateHud();
 }
 
 function endGame(won) {
-  clearHint();
+  clearHint(); over = true;
   if (won) score += moves * ENCORE;
   updateHud();
   const q = lineup[Math.random() * TYPES | 0];
   const o = $("overlay");
   o.className = "overlay";
   o.innerHTML = (won
-    ? `<img src="img/${q[0]}.jpg" alt="${q[1]}"><h2>Crowned!</h2><p>${score.toLocaleString()} points, including a ${(moves * ENCORE).toLocaleString()} encore bonus for ${moves} moves to spare.</p>`
-    : `<img src="img/${q[0]}.jpg" alt="${q[1]}"><h2>Sashay away</h2><p>${score.toLocaleString()} of ${TARGET.toLocaleString()} points. ${q[1]} says: lip sync again?</p>`)
+    ? `<img src="img/${q[0]}.jpg" alt="${q[1]}"><h2>Crowned!</h2><p>You beat the top score with ${score.toLocaleString()} points, including a ${(moves * ENCORE).toLocaleString()} encore bonus for ${moves} moves to spare.</p>`
+    : `<img src="img/${q[0]}.jpg" alt="${q[1]}"><h2>Sashay away</h2><p>${score.toLocaleString()} of ${target.toLocaleString()} points. ${q[1]} says: lip sync again?</p>`)
     + `<form class="entry" id="entry"><input id="playerName" maxlength="16" placeholder="Your name" autocomplete="nickname" aria-label="Your name" value="${esc(lastName())}"><button class="primary" type="submit">Save</button></form>
        <button class="link" id="again">Skip, play again</button>`;
   o.hidden = false;
