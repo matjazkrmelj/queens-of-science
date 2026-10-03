@@ -331,6 +331,7 @@ async function reshuffle() {
 // Shared scores live in Supabase when these are filled in; otherwise scores stay on this device.
 const SUPABASE_URL = "https://ezgmfdjedmeskizbfgmh.supabase.co";
 const SUPABASE_KEY = "sb_publishable_nhYGUV8E6Cu6KVAKzJu8Og_Br64RD1G";   // publishable key, safe to expose
+const SEASON_START = "2026-10-03T14:41:00Z";   // leaderboard only counts scores saved after this; move it forward to restart the board
 
 const LocalScores = {
   key: "qos-scores",
@@ -349,7 +350,7 @@ const SupabaseScores = {
     return h;
   },
   async top() {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/scores?select=id,name,score&order=score.desc,created_at.asc&limit=10`, { headers: this.headers() });
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/scores?select=id,name,score&created_at=gte.${SEASON_START}&order=score.desc,created_at.asc&limit=10`, { headers: this.headers() });
     if (!r.ok) throw new Error(`Leaderboard load failed (${r.status})`);
     return r.json();
   },
