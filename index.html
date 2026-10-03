@@ -161,7 +161,7 @@ const QUEENS = [
   ["puki-harana", "Puki Harana", "https://www.instagram.com/puki.harana/"]
 ];
 const COLORS = ["#19d469", "#f659ce", "#e8101c", "#1556ff"]; // Velvette green, Bikini pink, Georgy red, Puki blue
-const N = 5, TYPES = QUEENS.length, MOVES = 20, DEFAULT_TARGET = 2000, PTS = 10, ENCORE = 80;
+const N = 5, TYPES = QUEENS.length, MOVES = 20, DEFAULT_TARGET = 2000, PTS = 10;
 const SHOUTS = ["Slay!", "Werk!", "Yasss!", "Sashay!", "Iconic!", "Fierce!", "Mother!"];
 
 const boardEl = document.getElementById("board");
@@ -280,8 +280,7 @@ async function trySwap(a, b) {
   moves--; updateHud();
   await resolve();
   busy = false;
-  if (score > target) return endGame(true);
-  if (moves <= 0) return endGame(false);
+  if (moves <= 0) return endGame(score > target);
   armHint();
 }
 
@@ -388,13 +387,12 @@ async function loadTarget() {
 
 function endGame(won) {
   clearHint(); over = true;
-  if (won) score += moves * ENCORE;
   updateHud();
   const q = lineup[Math.random() * TYPES | 0];
   const o = $("overlay");
   o.className = "overlay";
   o.innerHTML = (won
-    ? `<img src="img/${q[0]}.jpg" alt="${q[1]}"><h2>Crowned!</h2><p>You beat the top score with ${score.toLocaleString()} points, including a ${(moves * ENCORE).toLocaleString()} encore bonus for ${moves} moves to spare.</p>`
+    ? `<img src="img/${q[0]}.jpg" alt="${q[1]}"><h2>Crowned!</h2><p>You beat the top score with ${score.toLocaleString()} points. ${q[1]} hands you the tiara.</p>`
     : `<img src="img/${q[0]}.jpg" alt="${q[1]}"><h2>Sashay away</h2><p>${score.toLocaleString()} of ${target.toLocaleString()} points. ${q[1]} says: lip sync again?</p>`)
     + `<form class="entry" id="entry"><input id="playerName" maxlength="16" placeholder="Your name" autocomplete="nickname" aria-label="Your name" value="${esc(lastName())}"><button class="primary" type="submit">Save</button></form>
        <button class="link" id="again">Skip, play again</button>`;
