@@ -1,0 +1,378 @@
+<!doctype html>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Queens of Science</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;800&display=swap">
+<style>
+/* Layout: event-poster stage. Angled pink/green blocks behind, pink banner title, black stat bars, black board with frosted-glass board with round queen pieces. Single look by choice. */
+:root {
+  --pink: #f659ce;
+  --pink-deep: #d43aae;
+  --green: #19d469;
+  --green-deep: #10a852;
+  --ink: #0d0d0f;
+  --paper: #ffffff;
+  --display: "Anton", "Impact", "Arial Narrow", sans-serif;
+  --body: "Archivo", system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0; color: var(--ink); font-family: var(--body); background-color: var(--pink);
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; overscroll-behavior: none;
+}
+/* poster blocks behind everything */
+body::before { content: ""; position: fixed; inset: -60px; z-index: -1; pointer-events: none;
+  background-color: var(--pink);
+  background-image:
+    linear-gradient(118deg, transparent 0 34%, var(--green) 34% 52%, transparent 52%),
+    linear-gradient(62deg, transparent 0 58%, var(--pink-deep) 58% 74%, transparent 74%),
+    linear-gradient(150deg, var(--green-deep) 0 14%, transparent 14%),
+    linear-gradient(-30deg, var(--green) 0 10%, transparent 10%); }
+.app { max-width: 520px; margin: 0 auto; padding-inline: 16px; padding-block: 14px 18px;
+  display: flex; flex-direction: column; gap: 12px; min-height: 100%; }
+
+header { position: relative; display: flex; justify-content: center; padding-block: 4px; }
+.banner { background: var(--pink); border: 4px solid var(--ink); transform: rotate(-3deg) skewX(-6deg);
+  padding: 6px 18px 8px; box-shadow: 6px 6px 0 var(--ink); text-align: center; }
+h1 { margin: 0; font-family: var(--display); font-weight: 400; text-transform: uppercase; line-height: .9;
+  color: var(--green); font-size: clamp(38px, 12vw, 58px); letter-spacing: .01em;
+  -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; text-shadow: 3px 3px 0 var(--ink); }
+h1 small { font-size: .5em; color: var(--paper); vertical-align: middle; margin-inline: .08em; }
+.tagline { display: inline-block; margin-top: 6px; background: var(--ink); color: var(--green);
+  font-family: var(--display); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; padding: 3px 10px; }
+
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.stat { background: var(--ink); padding: 6px 4px 5px; text-align: center; transform: skewX(-6deg); }
+.stat b { display: block; font-family: var(--display); font-weight: 400; font-size: 28px; line-height: 1.05;
+  color: var(--paper); font-variant-numeric: tabular-nums; }
+.stat span { font-family: var(--display); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--pink); }
+.stat.moves b { color: var(--green); }
+.stat.low b { color: var(--pink); animation: pulse .6s infinite alternate; }
+.bar { grid-column: 1 / -1; height: 10px; background: var(--ink); border: 2px solid var(--ink); }
+.bar i { display: block; height: 100%; width: 0;
+  background: repeating-linear-gradient(-45deg, var(--green) 0 8px, var(--green-deep) 8px 16px); transition: width .4s; }
+
+.lineup { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.lineup div { text-align: center; min-width: 0; }
+.lineup img { width: 100%; max-width: 64px; aspect-ratio: 1; border-radius: 50%; object-fit: cover; object-position: 50% 12%;
+  display: block; margin: 0 auto 4px; border: 6px solid var(--c); background: var(--c); }
+.lineup span { display: inline-block; background: var(--ink); color: var(--paper); font-family: var(--display);
+  font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 2px 6px; max-width: 100%;
+  line-height: 1.2; }
+
+.board-wrap { position: relative; }
+.box { position: relative; padding: 20px; touch-action: none;
+  background: rgba(13,13,15,.55); border-radius: 52px;
+  -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow: 0 18px 40px rgba(13,13,15,.35); }
+#board { position: relative; width: 100%; aspect-ratio: 1; max-width: 100%; overflow: hidden; touch-action: none; }
+.cellbg { position: absolute; border-radius: 50%; background: rgba(255,255,255,.08); }
+.tile { position: absolute; left: 0; top: 0; transition: transform .22s cubic-bezier(.3,.7,.4,1.1); will-change: transform;
+  display: flex; align-items: center; justify-content: center; }
+.tile.fall { transition-duration: .32s; transition-timing-function: cubic-bezier(.5,0,.6,1.25); }
+.card { width: 86%; height: 86%; border-radius: 50%; border: 5px solid var(--c); overflow: hidden; background: var(--c);
+  box-shadow: 0 3px 8px rgba(13,13,15,.35); transition: transform .2s, opacity .2s; }
+.card img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 12%; display: block; pointer-events: none; -webkit-user-drag: none; }
+.tile.sel .card { transform: scale(1.15); box-shadow: 0 0 0 3px var(--paper), 0 8px 14px rgba(13,13,15,.5); }
+.tile.sel { z-index: 2; }
+.tile.pop .card { transform: scale(0) rotate(160deg); opacity: 0; transition-duration: .25s; }
+.tile.hint .card { animation: wiggle .5s ease-in-out 3; }
+
+.toast { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); pointer-events: none; z-index: 5;
+  font-family: var(--display); text-transform: uppercase; font-size: clamp(28px, 10vw, 46px); color: var(--green); white-space: nowrap;
+  -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; text-shadow: 4px 4px 0 var(--pink); animation: toast .9s ease-out forwards; }
+
+footer { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; }
+button { font-family: var(--display); font-size: 18px; letter-spacing: .08em; text-transform: uppercase; border: 3px solid var(--ink);
+  padding: 8px 20px; cursor: pointer; background: var(--paper); color: var(--ink); box-shadow: 4px 4px 0 var(--ink); transform: skewX(-6deg); }
+button:active { transform: skewX(-6deg) translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+button.primary { background: var(--green); }
+button:focus-visible { outline: 3px solid var(--paper); outline-offset: 3px; }
+.help { font-size: 12px; font-weight: 500; color: var(--ink); text-align: center; margin: 0; background: rgba(255,255,255,.75); padding: 6px 10px; align-self: center; }
+
+.overlay { position: absolute; inset: 0; z-index: 10; border-radius: 52px; background: rgba(13,13,15,.82); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 20px; }
+.overlay h2 { font-family: var(--display); font-weight: 400; text-transform: uppercase; font-size: 48px; line-height: 1; margin: 0;
+  color: var(--green); text-shadow: 4px 4px 0 var(--pink); }
+.overlay p { margin: 0; color: var(--paper); max-width: 30ch; }
+.overlay img { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; object-position: 50% 12%; border: 5px solid var(--pink); box-shadow: 0 0 0 4px var(--green); }
+
+@keyframes wiggle { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-14deg) scale(1.12)} 75%{transform:rotate(14deg) scale(1.12)} }
+@keyframes toast { 0%{opacity:0; transform:translate(-50%,-30%) scale(.6) rotate(-6deg)} 20%{opacity:1; transform:translate(-50%,-50%) scale(1.1) rotate(-4deg)} 100%{opacity:0; transform:translate(-50%,-110%) scale(1) rotate(-4deg)} }
+@keyframes pulse { to { opacity: .5 } }
+@media (prefers-reduced-motion: reduce) { .tile, .card { transition-duration: .01s !important; } .toast, .hint .card { animation-duration: .01s !important; } }
+</style>
+
+<div class="app">
+  <header>
+    <div class="banner">
+      <h1>Queens <small>of</small> Science</h1>
+      <span class="tagline">Match 3 queens to serve</span>
+    </div>
+  </header>
+
+  <section class="stats" aria-label="Score">
+    <div class="stat"><b id="score">0</b><span>Score</span></div>
+    <div class="stat"><b id="target">0</b><span>Target</span></div>
+    <div class="stat moves" id="movesBox"><b id="moves">0</b><span>Moves</span></div>
+    <div class="bar"><i id="progress"></i></div>
+  </section>
+
+  <section class="lineup" id="lineup" aria-label="Tonight's lineup"></section>
+
+  <div class="board-wrap">
+    <div class="box"><div id="board" aria-label="Game board"></div></div>
+    <div class="overlay" id="overlay" hidden></div>
+  </div>
+
+  <footer>
+    <button id="newGame" class="primary">New show</button>
+    <button id="hintBtn">Hint</button>
+  </footer>
+  <p class="help">Swipe a queen into a neighbour, or tap two side by side. Line up 3 or more.</p>
+</div>
+
+<script>
+(() => {
+const QUEENS = [
+  ["bikini-the-third","Bikini the Third"],["georgy-gorgeous","Georgy Gorgeous"],
+  ["puki-harana","Puki Harana"],["velvette-teddy","Velvette Teddy"]
+];
+const COLORS = ["#f659ce", "#e8101c", "#1556ff", "#19d469"]; // Bikini pink, Georgy red, Puki blue, Velvette green
+const N = 5, TYPES = QUEENS.length, MOVES = 20, TARGET = 12000, PTS = 60;
+const SHOUTS = ["Slay!", "Werk!", "Yasss!", "Sashay!", "Iconic!", "Fierce!", "Mother!"];
+
+const boardEl = document.getElementById("board");
+const $ = id => document.getElementById(id);
+let grid, lineup, score, moves, busy, selected, cell, hintTimer;
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+// ---------- rendering ----------
+function measure() {
+  cell = boardEl.clientWidth / N;
+  boardEl.querySelectorAll(".cellbg").forEach(b => {
+    const r = +b.dataset.r, c = +b.dataset.c;
+    Object.assign(b.style, { left: c * cell + 2 + "px", top: r * cell + 2 + "px", width: cell - 4 + "px", height: cell - 4 + "px" });
+  });
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (grid?.[r][c]) place(grid[r][c], r, c, true);
+}
+function place(t, r, c, instant) {
+  const el = t.el;
+  if (instant) el.style.transition = "none";
+  el.style.width = el.style.height = cell + "px";
+  el.style.transform = `translate(${c * cell}px, ${r * cell}px)`;
+  if (instant) { el.offsetWidth; el.style.transition = ""; }
+}
+function makeTile(type) {
+  const el = document.createElement("div");
+  el.className = "tile";
+  const q = lineup[type];
+  el.innerHTML = `<div class="card" style="--c:${COLORS[type]}"><img src="img/${q[0]}.jpg" alt="${q[1]}"></div>`;
+  boardEl.appendChild(el);
+  return { type, el };
+}
+function updateHud() {
+  $("score").textContent = score.toLocaleString();
+  $("target").textContent = TARGET.toLocaleString();
+  $("moves").textContent = moves;
+  $("movesBox").classList.toggle("low", moves <= 5);
+  $("progress").style.width = Math.min(100, score / TARGET * 100) + "%";
+}
+function toast(text) {
+  const t = document.createElement("div");
+  t.className = "toast"; t.textContent = text;
+  boardEl.parentElement.appendChild(t);
+  setTimeout(() => t.remove(), 950);
+}
+
+// ---------- game logic ----------
+function newGame() {
+  boardEl.querySelectorAll(".tile").forEach(e => e.remove());
+  $("overlay").hidden = true;
+  lineup = QUEENS.slice();
+  $("lineup").innerHTML = lineup.map((q, i) =>
+    `<div><img src="img/${q[0]}.jpg" alt="" style="--c:${COLORS[i]}"><span>${q[1]}</span></div>`).join("");
+  score = 0; moves = MOVES; busy = false; selected = null;
+  do {
+    grid = Array.from({ length: N }, () => Array(N).fill(null));
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+      let t;
+      do { t = Math.random() * TYPES | 0; }
+      while ((c >= 2 && grid[r][c-1] === t && grid[r][c-2] === t) || (r >= 2 && grid[r-1][c] === t && grid[r-2][c] === t));
+      grid[r][c] = t;
+    }
+  } while (!findMove(grid));
+  grid = grid.map(row => row.map(t => makeTile(t)));
+  measure(); updateHud(); armHint();
+}
+
+const typeAt = (g, r, c) => { const v = g[r]?.[c]; return v == null ? -1 : (typeof v === "number" ? v : v.type); };
+
+function findMatches() {
+  const hits = new Set(); const groups = [];
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; ) {
+    const t = typeAt(grid, r, c); let e = c + 1;
+    while (e < N && typeAt(grid, r, e) === t) e++;
+    if (t >= 0 && e - c >= 3) { groups.push({ t, n: e - c }); for (let k = c; k < e; k++) hits.add(r * N + k); }
+    c = e;
+  }
+  for (let c = 0; c < N; c++) for (let r = 0; r < N; ) {
+    const t = typeAt(grid, r, c); let e = r + 1;
+    while (e < N && typeAt(grid, e, c) === t) e++;
+    if (t >= 0 && e - r >= 3) { groups.push({ t, n: e - r }); for (let k = r; k < e; k++) hits.add(k * N + c); }
+    r = e;
+  }
+  return { hits, groups };
+}
+
+function lineAt(g, r, c) {
+  const t = typeAt(g, r, c); if (t < 0) return false;
+  let h = 1, v = 1;
+  for (let k = c - 1; typeAt(g, r, k) === t; k--) h++;
+  for (let k = c + 1; typeAt(g, r, k) === t; k++) h++;
+  for (let k = r - 1; typeAt(g, k, c) === t; k--) v++;
+  for (let k = r + 1; typeAt(g, k, c) === t; k++) v++;
+  return h >= 3 || v >= 3;
+}
+function findMove(g) {
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) for (const [dr, dc] of [[0,1],[1,0]]) {
+    const r2 = r + dr, c2 = c + dc; if (r2 >= N || c2 >= N) continue;
+    [g[r][c], g[r2][c2]] = [g[r2][c2], g[r][c]];
+    const ok = lineAt(g, r, c) || lineAt(g, r2, c2);
+    [g[r][c], g[r2][c2]] = [g[r2][c2], g[r][c]];
+    if (ok) return [[r, c], [r2, c2]];
+  }
+  return null;
+}
+
+async function trySwap(a, b) {
+  if (busy || moves <= 0) return;
+  busy = true; clearHint(); select(null);
+  const [r1, c1] = a, [r2, c2] = b;
+  const swap = () => { [grid[r1][c1], grid[r2][c2]] = [grid[r2][c2], grid[r1][c1]]; place(grid[r1][c1], r1, c1); place(grid[r2][c2], r2, c2); };
+  swap(); await sleep(230);
+  if (!findMatches().hits.size) { swap(); await sleep(230); busy = false; armHint(); return; }
+  moves--; updateHud();
+  await resolve();
+  busy = false;
+  if (score >= TARGET) return endGame(true);
+  if (moves <= 0) return endGame(false);
+  armHint();
+}
+
+async function resolve() {
+  let combo = 1;
+  for (;;) {
+    const { hits, groups } = findMatches();
+    if (!hits.size) break;
+    const gained = hits.size * PTS * combo;
+    score += gained; updateHud();
+    const star = groups.reduce((a, g) => g.n > a.n ? g : a);
+    toast(combo > 1 ? `${SHOUTS[Math.random() * SHOUTS.length | 0]} x${combo}` : (star.n >= 4 ? `${lineup[star.t][1]}!` : `+${gained}`));
+    navigator.vibrate?.(combo > 1 ? [15, 30, 15] : 12);
+    hits.forEach(i => grid[i / N | 0][i % N].el.classList.add("pop"));
+    await sleep(260);
+    hits.forEach(i => { const r = i / N | 0, c = i % N; grid[r][c].el.remove(); grid[r][c] = null; });
+    // gravity + refill
+    for (let c = 0; c < N; c++) {
+      let w = N - 1;
+      for (let r = N - 1; r >= 0; r--) if (grid[r][c]) { const t = grid[r][c]; grid[r][c] = null; grid[w][c] = t; w--; }
+      for (let r = w, k = 1; r >= 0; r--, k++) {
+        const t = makeTile(Math.random() * TYPES | 0);
+        place(t, -k, c, true);
+        grid[r][c] = t;
+      }
+    }
+    boardEl.offsetWidth;
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) { grid[r][c].el.classList.add("fall"); place(grid[r][c], r, c); }
+    await sleep(340);
+    boardEl.querySelectorAll(".fall").forEach(e => e.classList.remove("fall"));
+    combo++;
+  }
+  if (!findMove(grid)) await reshuffle();
+}
+
+async function reshuffle() {
+  toast("Reshuffle!");
+  do {
+    const flat = shuffle(grid.flat());
+    grid = Array.from({ length: N }, (_, r) => flat.slice(r * N, r * N + N));
+  } while (findMatches().hits.size || !findMove(grid));
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) place(grid[r][c], r, c);
+  await sleep(300);
+}
+
+function endGame(won) {
+  clearHint();
+  const q = lineup[Math.random() * TYPES | 0];
+  const o = $("overlay");
+  o.innerHTML = won
+    ? `<img src="img/${q[0]}.jpg" alt="${q[1]}"><h2>Crowned!</h2><p>${score.toLocaleString()} points with ${moves} moves to spare. ${q[1]} hands you the tiara.</p><button class="primary" id="again">Next show</button>`
+    : `<img src="img/${q[0]}.jpg" alt="${q[1]}"><h2>Sashay away</h2><p>${score.toLocaleString()} of ${TARGET.toLocaleString()} points. ${q[1]} says: lip sync again?</p><button class="primary" id="again">Try again</button>`;
+  o.hidden = false;
+  $("again").onclick = newGame;
+}
+
+// ---------- hints ----------
+function clearHint() { clearTimeout(hintTimer); boardEl.querySelectorAll(".hint").forEach(e => e.classList.remove("hint")); }
+function armHint() { clearHint(); hintTimer = setTimeout(showHint, 6000); }
+function showHint() {
+  if (busy) return;
+  const m = findMove(grid); if (!m) return;
+  m.forEach(([r, c]) => { const el = grid[r][c].el; el.classList.remove("hint"); el.offsetWidth; el.classList.add("hint"); });
+  hintTimer = setTimeout(showHint, 6000);
+}
+
+// ---------- input ----------
+function select(p) {
+  if (selected) grid[selected[0]][selected[1]]?.el.classList.remove("sel");
+  selected = p;
+  if (p) grid[p[0]][p[1]].el.classList.add("sel");
+}
+let start = null;
+function cellFromEvent(e) {
+  const b = boardEl.getBoundingClientRect();
+  const c = Math.floor((e.clientX - b.left - boardEl.clientLeft) / cell), r = Math.floor((e.clientY - b.top - boardEl.clientTop) / cell);
+  return r >= 0 && r < N && c >= 0 && c < N ? [r, c] : null;
+}
+boardEl.addEventListener("pointerdown", e => {
+  if (busy) return;
+  const p = cellFromEvent(e); if (!p) return;
+  start = { p, x: e.clientX, y: e.clientY };
+  boardEl.setPointerCapture(e.pointerId);
+});
+boardEl.addEventListener("pointermove", e => {
+  if (!start) return;
+  const dx = e.clientX - start.x, dy = e.clientY - start.y;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < cell * 0.35) return;
+  const [r, c] = start.p; start = null;
+  const t = Math.abs(dx) > Math.abs(dy) ? [r, c + Math.sign(dx)] : [r + Math.sign(dy), c];
+  if (t[0] >= 0 && t[0] < N && t[1] >= 0 && t[1] < N) trySwap([r, c], t);
+});
+boardEl.addEventListener("pointerup", () => {
+  if (!start) return;
+  const p = start.p; start = null;
+  if (!selected) return select(p);
+  const [r, c] = selected;
+  if (r === p[0] && c === p[1]) return select(null);
+  if (Math.abs(r - p[0]) + Math.abs(c - p[1]) === 1) return trySwap(selected, p);
+  select(p);
+});
+boardEl.addEventListener("pointercancel", () => start = null);
+
+// board background cells
+for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+  const b = document.createElement("div"); b.className = "cellbg"; b.dataset.r = r; b.dataset.c = c; boardEl.appendChild(b);
+}
+$("newGame").onclick = newGame;
+$("hintBtn").onclick = () => { clearHint(); showHint(); };
+new ResizeObserver(measure).observe(boardEl);
+newGame();
+window.QS = { get grid() { return grid; }, findMove, trySwap, get score() { return score; }, get moves() { return moves; } };
+})();
+</script>
