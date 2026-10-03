@@ -324,28 +324,52 @@ async function reshuffle() {
 }
 
 // ---------- leaderboard ----------
-// Storage adapter: local to this device for now; swap top()/add() for a shared backend.
-const Scores = {
+// Shared scores live in Supabase when these are filled in; otherwise scores stay on this device.
+const SUPABASE_URL = "";   // e.g. "https://abcd1234.supabase.co"
+const SUPABASE_KEY = "";   // the project's anon / publishable key (safe to expose)
+
+const LocalScores = {
   key: "qos-scores",
   async top() { try { return JSON.parse(localStorage.getItem(this.key)) || []; } catch { return []; } },
   async add(entry) {
     const list = await this.top();
     list.push(entry); list.sort((a, b) => b.score - a.score);
-    const kept = list.slice(0, 50);
-    try { localStorage.setItem(this.key, JSON.stringify(kept)); } catch {}
-    return kept;
+    try { localStorage.setItem(this.key, JSON.stringify(list.slice(0, 50))); } catch {}
+    return entry.id;
   }
 };
+const SupabaseScores = {
+  headers(extra) {
+    const h = { apikey: SUPABASE_KEY, "Content-Type": "application/json", ...extra };
+    if (!SUPABASE_KEY.startsWith("sb_")) h.Authorization = `Bearer ${SUPABASE_KEY}`;
+    return h;
+  },
+  async top() {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/scores?select=id,name,score&order=score.desc,created_at.asc&limit=10`, { headers: this.headers() });
+    if (!r.ok) throw new Error(`Leaderboard load failed (${r.status})`);
+    return r.json();
+  },
+  async add(entry) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/scores`, {
+      method: "POST", headers: this.headers({ Prefer: "return=representation" }),
+      body: JSON.stringify({ name: entry.name, score: entry.score, won: entry.won })
+    });
+    if (!r.ok) throw new Error(`Score save failed (${r.status})`);
+    return (await r.json())[0].id;
+  }
+};
+const Scores = SUPABASE_URL && SUPABASE_KEY ? SupabaseScores : LocalScores;
 const esc = t => String(t).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
 const lastName = () => { try { return localStorage.getItem("qos-name") || ""; } catch { return ""; } };
 
 async function showLeaderboard(highlightId) {
   clearHint();
   const o = $("overlay");
-  const list = (await Scores.top()).slice(0, 10);
+  let list = [], failed = false;
+  try { list = (await Scores.top()).slice(0, 10); } catch { failed = true; }
   const rows = list.map(e => `<li class="${e.id === highlightId ? "me" : ""}"><span>${esc(e.name)}</span><b>${e.score.toLocaleString()}</b></li>`).join("");
   o.className = "overlay scroll";
-  o.innerHTML = `<h2>Leaderboard</h2>${rows ? `<ol class="scores">${rows}</ol>` : `<p class="empty">No scores yet. Finish a show to get on the board.</p>`}
+  o.innerHTML = `<h2>Leaderboard</h2>${failed ? `<p class="empty">Couldn't load the leaderboard. Check your connection and try again.</p>` : rows ? `<ol class="scores">${rows}</ol>` : `<p class="empty">No scores yet. Finish a show to get on the board.</p>`}
     <button class="primary" id="again">${moves > 0 && score < TARGET && highlightId === undefined ? "Back to game" : "Play again"}</button>`;
   o.hidden = false;
   $("again").onclick = () => { o.className = "overlay"; if (highlightId === undefined && moves > 0 && score < TARGET) { o.hidden = true; armHint(); } else newGame(); };
@@ -370,9 +394,15 @@ function endGame(won) {
     const name = $("playerName").value.trim().slice(0, 16);
     if (!name) { $("playerName").focus(); return; }
     try { localStorage.setItem("qos-name", name); } catch {}
-    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    await Scores.add({ id, name, score, won, at: new Date().toISOString() });
-    showLeaderboard(id);
+    const btn = e.submitter || $("entry").querySelector("button");
+    btn.disabled = true; btn.textContent = "Saving…";
+    try {
+      const id = await Scores.add({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, score, won });
+      showLeaderboard(id);
+    } catch {
+      btn.disabled = false; btn.textContent = "Retry";
+      toast("Not saved");
+    }
   };
 }
 
@@ -402,7 +432,7 @@ boardEl.addEventListener("pointerdown", e => {
   if (busy) return;
   const p = cellFromEvent(e); if (!p) return;
   start = { p, x: e.clientX, y: e.clientY };
-  boardEl.setPointerCapture(e.pointerId);
+  try { boardEl.setPointerCapture(e.pointerId); } catch {}
 });
 boardEl.addEventListener("pointermove", e => {
   if (!start) return;
